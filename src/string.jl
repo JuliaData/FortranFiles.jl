@@ -40,7 +40,7 @@ As in Fortran, the string will be padded with spaces or truncated in order to re
 """
 FString(L, s::String) = convert( FString{L}, s )
 
-String(s::FString{L}) where {L} = String(map(Char,s.data))
+Base.String(s::FString{L}) where {L} = String(map(Char,s.data))
 Base.convert(::Type{String}, s::FString{L}) where {L} = String(s)
 
 
