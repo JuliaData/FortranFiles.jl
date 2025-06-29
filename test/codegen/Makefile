@@ -31,7 +31,7 @@ gendatadirect$(SUFFIX).o: gendatadirect.F90
 $(RANDOMSRC): .random-stamp
 
 .random-stamp: genrandom.jl random.ftl ftl-expand
-	julia genrandom.jl
+	julia --startup-file=no genrandom.jl
 	touch $@
 
 $(RANDOMOBJ): randutil.mod
@@ -39,7 +39,7 @@ $(RANDOMOBJ): randutil.mod
 $(FGENSRC) $(JGENSRC): .code-stamp
 
 .code-stamp: gencode.jl
-	julia gencode.jl
+	julia --startup-file=no gencode.jl
 	touch $@
 
 %.o: %.f90

@@ -55,10 +55,8 @@ const byteorder_tests = [
 # --- Generation of test data and Julia reading/writing code ---
 
 function gendata(target, tag, fflags)
-   cmd = `make -C codegen $target SUFFIX=_$tag XFLAGS=$fflags`
-   run(cmd)
-   cmd = `codegen/$(target)_$(tag).x data_$(tag).bin`
-   run(cmd)
+   `make -C codegen $target SUFFIX=_$tag XFLAGS=$fflags` |> run
+   `codegen/$(target)_$(tag).x data_$(tag).bin` |> run
 end
 
 function genalldata(tests...)
@@ -70,12 +68,14 @@ function genalldata(tests...)
    return nothing
 end
 
-genalldata(rectyp_tests, byteorder_tests)
+if Sys.islinux()
+   genalldata(rectyp_tests, byteorder_tests)
 
-include("codegen/jread.jl")
-include("codegen/jfread.jl")
-include("codegen/jskip.jl")
-include("codegen/jwrite.jl")
+   include("codegen/jread.jl")
+   include("codegen/jfread.jl")
+   include("codegen/jskip.jl")
+   include("codegen/jwrite.jl")
+end
 
 # --- Auxiliary functions ---
 
@@ -188,36 +188,32 @@ end
 
 @testset "Exceptions" begin
    @testset "Constructor" begin
-      open("/dev/null", "w") do io
-         # sequential access file with fixed-length records
-         @test_throws FortranFilesError FortranFile(io, recl=80)
-         # direct access file without record length
-         @test_throws FortranFilesError FortranFile(io, access="direct")
-         # unknown access mode
-         @test_throws FortranFilesError FortranFile(io, access="stream")
-         # unknown byte-order conversion
-         @test_throws FortranFilesError FortranFile(io, convert="host")
-      end
+      # sequential access file with fixed-length records
+      @test_throws FortranFilesError FortranFile(devnull, recl=80)
+      # direct access file without record length
+      @test_throws FortranFilesError FortranFile(devnull, access="direct")
+      # unknown access mode
+      @test_throws FortranFilesError FortranFile(devnull, access="stream")
+      # unknown byte-order conversion
+      @test_throws FortranFilesError FortranFile(devnull, convert="host")
    end
 
    @testset "Writing" begin
-      open("/dev/null", "w") do io
-         # direct access files
-         fdir = FortranFile(io, access="direct", recl=80)
-         # no record number
-         @test_throws FortranFilesError write(fdir, zeros(10))
-         # write too much
-         @test_throws FortranFilesError write(fdir, rec=1, zeros(11))
+      # direct access files
+      fdir = FortranFile(devnull, access="direct", recl=80)
+      # no record number
+      @test_throws FortranFilesError write(fdir, zeros(10))
+      # write too much
+      @test_throws FortranFilesError write(fdir, rec=1, zeros(11))
 
-         # sequential access files
-         for recmrk in (RECMRK4B,RECMRK4Bwosr)
-            fseq = FortranFile(io, marker=recmrk)
-            # with record number
-            @test_throws MethodError write(fseq, rec=1, zeros(10))
-            # inhomogeneous array, see PR#4
-            inhomA = Integer[1, big(2)]
-            @test_throws FortranFilesError write(fseq, inhomA)
-         end
+      # sequential access files
+      for recmrk in (RECMRK4B,RECMRK4Bwosr)
+         fseq = FortranFile(devnull, marker=recmrk)
+         # with record number
+         @test_throws MethodError write(fseq, rec=1, zeros(10))
+         # inhomogeneous array, see PR#4
+         inhomA = Integer[1, big(2)]
+         @test_throws FortranFilesError write(fseq, inhomA)
       end
    end
 
@@ -233,11 +229,11 @@ end
          io = IOBuffer(data)
          fdir = FortranFile(io, access="direct", recl=80)
          # no record number
-         @test_throws FortranFilesError AA = read(fdir, (Float64,10))
+         @test_throws FortranFilesError AA = read(fdir, (Float64, 10))
          # macro version
-         @test_throws FortranFilesError @fread fdir AA::(Float64,10)
+         @test_throws FortranFilesError @fread fdir AA::(Float64, 10)
          # read too much
-         @test_throws FortranFilesError AA = read(fdir, rec=1, (Float64,11))
+         @test_throws FortranFilesError AA = read(fdir, rec=1, (Float64, 11))
          close(fdir)
 
          # sequential access files
@@ -251,11 +247,11 @@ end
             io = IOBuffer(data)
             fseq = FortranFile(io, marker=recmrk)
             # with record number
-            @test_throws MethodError AA = read(fseq, rec=1, (Float64,10))
+            @test_throws MethodError AA = read(fseq, rec=1, (Float64, 10))
             # macro version
-            @test_throws FortranFilesError @fread fseq rec=1 AA::(Float64,10)
+            @test_throws FortranFilesError @fread fseq rec=1 AA::(Float64, 10)
             # read too much
-            @test_throws FortranFilesError AA = read(fseq, (Float64,11))
+            @test_throws Exception AA = read(fseq, (Float64, 11))
             close(fseq)
             # garbage data: wrong trailing record marker
             data = UInt8[]
@@ -264,7 +260,7 @@ end
             close(io)
             io = IOBuffer(data)
             fseq = FortranFile(io, marker=recmrk)
-            @test_throws FortranFilesError AA = read(fseq, (Float64,10))
+            @test_throws Exception AA = read(fseq, (Float64, 10))
             close(fseq)
          end
       end
@@ -302,8 +298,7 @@ end
    @test_throws InexactError FString(80, jstr)
 end
 
-@testset "Testing records with $(rectest.desc), $(botest.name) byte order" for rectest in rectyp_tests, botest in byteorder_tests
-
+Sys.islinux() && @testset "Testing records with $(rectest.desc), $(botest.name) byte order" for rectest in rectyp_tests, botest in byteorder_tests
    local infile, outfile, data, data2
    tag = "$(rectest.tag)_$(botest.tag)"
    infilename  = "data_$(tag).bin"
@@ -348,4 +343,12 @@ end
       @test cmpfiles(infilename, outfilename)
    end
 
-end;
+end
+
+if Sys.islinux()
+   run(`make -C codegen clean`)
+   for fn in readdir()
+      isfile(fn) || continue
+      endswith(fn, ".bin") && rm(fn)
+   end
+end

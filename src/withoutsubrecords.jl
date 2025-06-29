@@ -21,16 +21,14 @@ function Record( f::FortranFile{SequentialAccess{WithoutSubrecords{T}},C}, towri
 end
 
 function Base.unsafe_read( rec::RecordWithoutSubrecords, p::Ptr{UInt8}, n::UInt )
-   if (n > rec.nleft)
-      fthrow("attempting to read beyond record end")
-   end
+   n > rec.nleft && fthrow("attempting to read beyond record end")
    unsafe_read( rec.io, p, n )
    rec.nleft -= n
    nothing
 end
 
 function Base.unsafe_write( rec::RecordWithoutSubrecords, p::Ptr{UInt8}, n::UInt )
-   if (n > rec.nleft); fthrow("attempting to write beyond record end"); end
+   n > rec.nleft && fthrow("attempting to write beyond record end")
    nwritten = unsafe_write( rec.io, p, n )
    rec.nleft -= n
    return nwritten
@@ -43,9 +41,7 @@ function Base.close( rec::RecordWithoutSubrecords{T} ) where {T}
    else
       skip(rec.io, rec.nleft)
       reclen = rec.convert.onread( read(rec.io, T) ) # read trailing record marker
-      if reclen != rec.reclen
-         fthrow("trailing record marker doesn't match")
-      end
+      reclen == rec.reclen|| fthrow("trailing record marker doesn't match")
    end
    nothing
 end
