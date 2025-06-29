@@ -302,8 +302,7 @@ end
    @test_throws InexactError FString(80, jstr)
 end
 
-@testset "Testing records with $(rectest.desc), $(botest.name) byte order" for rectest in rectyp_tests, botest in byteorder_tests
-
+Sys.islinux() && @testset "Testing records with $(rectest.desc), $(botest.name) byte order" for rectest in rectyp_tests, botest in byteorder_tests
    local infile, outfile, data, data2
    tag = "$(rectest.tag)_$(botest.tag)"
    infilename  = "data_$(tag).bin"
