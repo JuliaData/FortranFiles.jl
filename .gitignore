@@ -1,7 +1,11 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+
+test/Manifest.toml
 test/codegen/*
 test/*.bin
+
 docs/build/
+
 Manifest.toml

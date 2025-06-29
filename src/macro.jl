@@ -31,67 +31,71 @@ but this can't work because `n` is only assigned after the `read` statement is
 processed. The macro interface is provided to cover such cases.
 """
 macro fread(fortranFile, args...)
-   # take first argument and start a code block
-   fvar = esc(fortranFile)
-   ex = quote
-      f = $fvar
-   end
+    # take first argument and start a code block
+    fvar = esc(fortranFile)
+    ex = quote
+        f = $fvar
+    end
 
-   # process the arguments, which may be:
-   # - keyword assignment (look for = in Expr)
-   # - var::T specification (look for :: in Expr)
-   # - var (look for Symbol)
-   haverecnum = false
-   local recnum
-   specs = Any[]
-   for arg in args
-      if isa(arg, Expr)
-         if arg.head == :(=)
-            if arg.args[1] == :rec
-               recnum = esc(arg.args[2])
-               haverecnum = true
+    # process the arguments, which may be:
+    # - keyword assignment (look for = in Expr)
+    # - var::T specification (look for :: in Expr)
+    # - var (look for Symbol)
+    haverecnum = false
+    local recnum
+    specs = Any[]
+    for arg in args
+        if isa(arg, Expr)
+            if arg.head == :(=)
+                if arg.args[1] == :rec
+                    recnum = esc(arg.args[2])
+                    haverecnum = true
+                else
+                    throw(ArgumentError("unknown keyword argument '$(arg.args[1])'"))
+                end
+            elseif arg.head == :(::)
+                var = esc(arg.args[1])
+                typ = esc(arg.args[2])
+                push!(specs, (var, typ))
             else
-               throw(ArgumentError("unknown keyword argument '$(arg.args[1])'"))
+                throw(ArgumentError("unsupported specification for read: '$(arg)'"))
             end
-         elseif arg.head == :(::)
-            var = esc(arg.args[1])
-            typ = esc(arg.args[2])
-            push!(specs, (var,typ))
-         else
+        elseif isa(arg, Symbol)
+            var = esc(arg)
+            push!(specs, var)
+        else
             throw(ArgumentError("unsupported specification for read: '$(arg)'"))
-         end
-      elseif isa(arg, Symbol)
-         var = esc(arg)
-         push!(specs, var)
-      else
-         throw(ArgumentError("unsupported specification for read: '$(arg)'"))
-      end
-   end
+        end
+    end
 
-   # construct the code block
-   if haverecnum
-      push!(ex.args, quote
-         if !isa(f, FortranFile{DirectAccess})
-            fthrow("keyword argument 'rec' only allowed for direct-access files")
-         end
-         rec = Record(f, $recnum)
-      end)
-   else
-      push!(ex.args, quote
-         if isa(f, FortranFile{DirectAccess})
-            fthrow("keyword argument 'rec' required for direct-access files")
-         end
-         rec = Record(f)
-      end)
-   end
-   for spec in specs
-      if isa(spec, Tuple)
-         var, typ = spec
-         push!( ex.args, :( $var = read_spec(rec, $typ) ))
-      else
-         push!( ex.args, :( read_spec(rec, $spec) ))
-      end
-   end
-   push!( ex.args, :(close(rec)) )
-   return ex
+    # construct the code block
+    if haverecnum
+        push!(
+            ex.args, quote
+                if !isa(f, FortranFile{DirectAccess})
+                    fthrow("keyword argument 'rec' only allowed for direct-access files")
+                end
+                rec = Record(f, $recnum)
+            end
+        )
+    else
+        push!(
+            ex.args, quote
+                if isa(f, FortranFile{DirectAccess})
+                    fthrow("keyword argument 'rec' required for direct-access files")
+                end
+                rec = Record(f)
+            end
+        )
+    end
+    for spec in specs
+        if isa(spec, Tuple)
+            var, typ = spec
+            push!(ex.args, :($var = read_spec(rec, $typ)))
+        else
+            push!(ex.args, :(read_spec(rec, $spec)))
+        end
+    end
+    push!(ex.args, :(close(rec)))
+    return ex
 end

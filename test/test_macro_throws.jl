@@ -2,14 +2,13 @@
 # Julia-0.7 and later always wrap the exception in a LoadError.
 
 macro test_macro_throws(typ, expr)
-   quote
-      @test_throws $typ begin
-         try
-            $expr
-         catch e
-            rethrow(e.error)
-         end
-      end
-   end
+    return quote
+        @test_throws $typ begin
+            try
+                $expr
+            catch e
+                rethrow(e.error)
+            end
+        end
+    end
 end
-
