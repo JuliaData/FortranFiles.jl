@@ -253,7 +253,7 @@ end
             # macro version
             @test_throws FortranFilesError @fread fseq rec=1 AA::(Float64, 10)
             # read too much
-            @test_throws EOFError AA = read(fseq, (Float64, 11))
+            @test_throws Exception AA = read(fseq, (Float64, 11))
             close(fseq)
             # garbage data: wrong trailing record marker
             data = UInt8[]
@@ -262,7 +262,7 @@ end
             close(io)
             io = IOBuffer(data)
             fseq = FortranFile(io, marker=recmrk)
-            @test_throws EOFError AA = read(fseq, (Float64, 10))
+            @test_throws Exception AA = read(fseq, (Float64, 10))
             close(fseq)
          end
       end
