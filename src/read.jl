@@ -21,66 +21,65 @@ Return value:
 * if one `spec` is given: the scalar or array requested
 * if more `spec`s are given: a tuple of the scalars and arrays requested, in order
 """
-function Base.read( f::FortranFile, specs...)
-   record = Record(f)
-   result = fread(record, specs...)
-   close(record)
-   return result
+function Base.read(f::FortranFile, specs...)
+    record = Record(f)
+    result = fread(record, specs...)
+    close(record)
+    return result
 end
 
-function Base.read( f::FortranFile{DirectAccess}, specs... ; rec::Integer=0 )
-   if rec == 0
-      fthrow("direct-access files require specifying the record to be read (use rec keyword argument)")
-   end
-   record = Record(f, rec)
-   result = fread(record, specs...)
-   close(record)
-   return result
+function Base.read(f::FortranFile{DirectAccess}, specs...; rec::Integer = 0)
+    if rec == 0
+        fthrow("direct-access files require specifying the record to be read (use rec keyword argument)")
+    end
+    record = Record(f, rec)
+    result = fread(record, specs...)
+    close(record)
+    return result
 end
 
-function fread( rec::Record )
-   return nothing
+function fread(rec::Record)
+    return nothing
 end
 
-function fread( rec::Record, spec )
-   data = read_spec(rec, spec)
-   return data
+function fread(rec::Record, spec)
+    data = read_spec(rec, spec)
+    return data
 end
 
-function fread( rec::Record, specs... )
-   data = map( spec->read_spec(rec,spec), specs)
-   return data
+function fread(rec::Record, specs...)
+    data = map(spec -> read_spec(rec, spec), specs)
+    return data
 end
 
 # workaround for "does not support byte I/O"
-function read_spec( rec::Record, spec::Type{Int8} )
-   b = read_spec(rec, (Int8,1))
-   return b[1]
+function read_spec(rec::Record, spec::Type{Int8})
+    b = read_spec(rec, (Int8, 1))
+    return b[1]
 end
 
-function read_spec( rec::Record, spec::Type{T} ) where {T}
-   rec.convert.onread( read(rec, spec) )::T
+function read_spec(rec::Record, spec::Type{T}) where {T}
+    return rec.convert.onread(read(rec, spec))::T
 end
 
-function read_spec( rec::Record, spec::Array{T,N} ) where {T,N}
-   arr = read!(rec, spec)::Array{T,N}
-   map!(rec.convert.onread, arr, arr)
-   return arr
+function read_spec(rec::Record, spec::Array{T, N}) where {T, N}
+    arr = read!(rec, spec)::Array{T, N}
+    map!(rec.convert.onread, arr, arr)
+    return arr
 end
 
-function read_spec(rec::Record, spec::Tuple{DataType,I} ) where {I<:Integer}
-   T,n = spec
-   read_spec(rec, Array{T}(undef, n))::Array{T,1}
+function read_spec(rec::Record, spec::Tuple{DataType, I}) where {I <: Integer}
+    T, n = spec
+    return read_spec(rec, Array{T}(undef, n))::Array{T, 1}
 end
 
-function read_spec( rec::Record, spec::Tuple{DataType, Vararg{Integer,N}} ) where {N}
-   T = spec[1]
-   sz = spec[2:end]
-   read_spec(rec, Array{T}(undef, sz...))::Array{T,N}
+function read_spec(rec::Record, spec::Tuple{DataType, Vararg{Integer, N}}) where {N}
+    T = spec[1]
+    sz = spec[2:end]
+    return read_spec(rec, Array{T}(undef, sz...))::Array{T, N}
 end
 
-function read_spec( rec::Record, spec::Tuple{DataType, Tuple{Vararg{Integer,N}}} ) where {N}
-   T,sz = spec
-   read_spec(rec, Array{T}(undef, sz...))::Array{T,N}
+function read_spec(rec::Record, spec::Tuple{DataType, Tuple{Vararg{Integer, N}}}) where {N}
+    T, sz = spec
+    return read_spec(rec, Array{T}(undef, sz...))::Array{T, N}
 end
-
