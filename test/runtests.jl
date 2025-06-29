@@ -188,36 +188,32 @@ end
 
 @testset "Exceptions" begin
    @testset "Constructor" begin
-      open(devnull, "w") do io
-         # sequential access file with fixed-length records
-         @test_throws FortranFilesError FortranFile(io, recl=80)
-         # direct access file without record length
-         @test_throws FortranFilesError FortranFile(io, access="direct")
-         # unknown access mode
-         @test_throws FortranFilesError FortranFile(io, access="stream")
-         # unknown byte-order conversion
-         @test_throws FortranFilesError FortranFile(io, convert="host")
-      end
+      # sequential access file with fixed-length records
+      @test_throws FortranFilesError FortranFile(devnull, recl=80)
+      # direct access file without record length
+      @test_throws FortranFilesError FortranFile(devnull, access="direct")
+      # unknown access mode
+      @test_throws FortranFilesError FortranFile(devnull, access="stream")
+      # unknown byte-order conversion
+      @test_throws FortranFilesError FortranFile(devnull, convert="host")
    end
 
    @testset "Writing" begin
-      open(devnull, "w") do io
-         # direct access files
-         fdir = FortranFile(io, access="direct", recl=80)
-         # no record number
-         @test_throws FortranFilesError write(fdir, zeros(10))
-         # write too much
-         @test_throws FortranFilesError write(fdir, rec=1, zeros(11))
+      # direct access files
+      fdir = FortranFile(devnull, access="direct", recl=80)
+      # no record number
+      @test_throws FortranFilesError write(fdir, zeros(10))
+      # write too much
+      @test_throws FortranFilesError write(fdir, rec=1, zeros(11))
 
-         # sequential access files
-         for recmrk in (RECMRK4B,RECMRK4Bwosr)
-            fseq = FortranFile(io, marker=recmrk)
-            # with record number
-            @test_throws MethodError write(fseq, rec=1, zeros(10))
-            # inhomogeneous array, see PR#4
-            inhomA = Integer[1, big(2)]
-            @test_throws FortranFilesError write(fseq, inhomA)
-         end
+      # sequential access files
+      for recmrk in (RECMRK4B,RECMRK4Bwosr)
+         fseq = FortranFile(devnull, marker=recmrk)
+         # with record number
+         @test_throws MethodError write(fseq, rec=1, zeros(10))
+         # inhomogeneous array, see PR#4
+         inhomA = Integer[1, big(2)]
+         @test_throws FortranFilesError write(fseq, inhomA)
       end
    end
 
