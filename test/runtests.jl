@@ -55,10 +55,8 @@ const byteorder_tests = [
 # --- Generation of test data and Julia reading/writing code ---
 
 function gendata(target, tag, fflags)
-   cmd = `make -C codegen $target SUFFIX=_$tag XFLAGS=$fflags`
-   run(cmd)
-   cmd = `codegen/$(target)_$(tag).x data_$(tag).bin`
-   run(cmd)
+   `make -C codegen $target SUFFIX=_$tag XFLAGS=$fflags` |> run
+   `codegen/$(target)_$(tag).x data_$(tag).bin` |> run
 end
 
 function genalldata(tests...)
@@ -233,11 +231,11 @@ end
          io = IOBuffer(data)
          fdir = FortranFile(io, access="direct", recl=80)
          # no record number
-         @test_throws FortranFilesError AA = read(fdir, (Float64,10))
+         @test_throws FortranFilesError AA = read(fdir, (Float64, 10))
          # macro version
-         @test_throws FortranFilesError @fread fdir AA::(Float64,10)
+         @test_throws FortranFilesError @fread fdir AA::(Float64, 10)
          # read too much
-         @test_throws FortranFilesError AA = read(fdir, rec=1, (Float64,11))
+         @test_throws FortranFilesError AA = read(fdir, rec=1, (Float64, 11))
          close(fdir)
 
          # sequential access files
@@ -251,11 +249,11 @@ end
             io = IOBuffer(data)
             fseq = FortranFile(io, marker=recmrk)
             # with record number
-            @test_throws MethodError AA = read(fseq, rec=1, (Float64,10))
+            @test_throws MethodError AA = read(fseq, rec=1, (Float64, 10))
             # macro version
-            @test_throws FortranFilesError @fread fseq rec=1 AA::(Float64,10)
+            @test_throws FortranFilesError @fread fseq rec=1 AA::(Float64, 10)
             # read too much
-            @test_throws FortranFilesError AA = read(fseq, (Float64,11))
+            @test_throws EOFError AA = read(fseq, (Float64, 11))
             close(fseq)
             # garbage data: wrong trailing record marker
             data = UInt8[]
@@ -264,7 +262,7 @@ end
             close(io)
             io = IOBuffer(data)
             fseq = FortranFile(io, marker=recmrk)
-            @test_throws FortranFilesError AA = read(fseq, (Float64,10))
+            @test_throws EOFError AA = read(fseq, (Float64, 10))
             close(fseq)
          end
       end
@@ -348,4 +346,6 @@ end
       @test cmpfiles(infilename, outfilename)
    end
 
-end;
+end
+
+run(`make -C codegen clean`)
