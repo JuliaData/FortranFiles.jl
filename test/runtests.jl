@@ -349,3 +349,7 @@ end
 end
 
 run(`make -C codegen clean`)
+for fn in readdir()
+   isfile(fn) || continue
+   endswith(fn, ".bin") && rm(fn)
+end
