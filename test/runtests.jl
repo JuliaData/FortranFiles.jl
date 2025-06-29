@@ -188,7 +188,7 @@ end
 
 @testset "Exceptions" begin
    @testset "Constructor" begin
-      open("/dev/null", "w") do io
+      open(devnull, "w") do io
          # sequential access file with fixed-length records
          @test_throws FortranFilesError FortranFile(io, recl=80)
          # direct access file without record length
@@ -201,7 +201,7 @@ end
    end
 
    @testset "Writing" begin
-      open("/dev/null", "w") do io
+      open(devnull, "w") do io
          # direct access files
          fdir = FortranFile(io, access="direct", recl=80)
          # no record number
