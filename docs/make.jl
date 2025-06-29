@@ -17,6 +17,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/traktofon/FortranFiles.jl.git",
+    repo = "github.com/JuliaData/FortranFiles.jl.git",
     branch = "gh-pages"
 )
