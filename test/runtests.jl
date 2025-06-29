@@ -68,12 +68,14 @@ function genalldata(tests...)
    return nothing
 end
 
-genalldata(rectyp_tests, byteorder_tests)
+if Sys.islinux()
+   genalldata(rectyp_tests, byteorder_tests)
 
-include("codegen/jread.jl")
-include("codegen/jfread.jl")
-include("codegen/jskip.jl")
-include("codegen/jwrite.jl")
+   include("codegen/jread.jl")
+   include("codegen/jfread.jl")
+   include("codegen/jskip.jl")
+   include("codegen/jwrite.jl")
+end
 
 # --- Auxiliary functions ---
 
@@ -348,8 +350,10 @@ end
 
 end
 
-run(`make -C codegen clean`)
-for fn in readdir()
-   isfile(fn) || continue
-   endswith(fn, ".bin") && rm(fn)
+if Sys.islinux()
+   run(`make -C codegen clean`)
+   for fn in readdir()
+      isfile(fn) || continue
+      endswith(fn, ".bin") && rm(fn)
+   end
 end
