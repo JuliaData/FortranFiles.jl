@@ -59,6 +59,21 @@ arguments are as in `FortranFile(io::IO; kwargs...)`.
 """
 FortranFile(fn::String, mode = "r"; kwargs...) = FortranFile(open(fn, mode); kwargs...)
 
+"""
+    FortranFile(f::Function, fn::String [, mode="r" ]; kwargs...)
+
+Apply the function `f` to the result of `open(args...; kwargs...)` and close the resulting file
+descriptor upon completion.
+"""
+function FortranFile(f::Function, args...; kwargs...)
+    io = FortranFile(args...; kwargs...)
+    return try
+        f(io)
+    finally
+        close(io)
+    end
+end
+
 
 "Re-position a `FortranFile` at its beginning."
 rewind(f::FortranFile) = seek(f.io, 0)
