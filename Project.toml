@@ -1,7 +1,7 @@
 name    = "FortranFiles"
 uuid    = "c58ffaec-ab22-586d-bfc5-781a99fd0b10"
 author  = ["Frank Otto <traktofon@gmail.com>"]
-version = "0.6.1"
+version = "0.6.2-DEV"
 
 [compat]
 julia = "1"
