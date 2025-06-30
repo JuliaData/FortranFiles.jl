@@ -10,7 +10,11 @@ FortranFiles.jl Changelog
 [badge-fix]: https://img.shields.io/badge/Fix-purple.svg
 [badge-info]: https://img.shields.io/badge/Info-gray.svg
 
-Version 0.6.1-DEV
+Version 0.6.2-DEV
+-------------
+
+
+Version 0.6.1
 -------------
 - ![FEATURE][badge-feature] Support `do` syntax.
 - ![INFO][badge-info] Qualify import of String
