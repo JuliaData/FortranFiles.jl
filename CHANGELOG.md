@@ -10,7 +10,10 @@ FortranFiles.jl Changelog
 [badge-fix]: https://img.shields.io/badge/Fix-purple.svg
 [badge-info]: https://img.shields.io/badge/Info-gray.svg
 
-Version 0.6.2-DEV
+Version 0.6.3-DEV
+-------------
+
+Version 0.6.2
 -------------
 - ![INFO][badge-info] `seekstart` is used instead of `rewind` (which will be deprecated in future version).
 
