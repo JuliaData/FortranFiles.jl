@@ -12,7 +12,7 @@ FortranFiles.jl Changelog
 
 Version 0.6.2-DEV
 -------------
-
+- ![BREAKING][badge-breaking] deprecrate `rewind` in favor of `seekstart` (`rewind` is still exported here)
 
 Version 0.6.1
 -------------

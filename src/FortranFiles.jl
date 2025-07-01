@@ -2,7 +2,7 @@ __precompile__()
 
 module FortranFiles
 
-    export FortranFile, rewind
+    export FortranFile
     export RECMRK4B, RECMRK8B
     export FString, trimstring, trimlen, trim
     export FortranFilesError
