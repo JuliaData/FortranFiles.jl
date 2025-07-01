@@ -76,8 +76,8 @@ end
 
 
 "Re-position a `FortranFile` at its beginning."
-rewind(f::FortranFile) = seek(f.io, 0)
-
+Base.seekstart(f::FortranFile) = seekstart(f.io)
+@deprecate rewind seekstart
 
 Base.close(f::FortranFile) = close(f.io)
 

@@ -346,10 +346,13 @@ Sys.islinux() && @testset "Testing records with $(rectest.desc), $(botest.name) 
         rewind(infile)
         data2 = freaddata(infile)
         @test data == data2
+        seekstart(infile)
+        data2 = freaddata(infile)
+        @test data == data2
     end
 
     @time @testset "Reading data with skipping" begin
-        rewind(infile)
+        seekstart(infile)
         skipdata(infile)
         close(infile)
     end

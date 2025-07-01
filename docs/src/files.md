@@ -60,7 +60,7 @@ To test for EOF, use the standard Julia `eof` function.
 
 The following functions are provided to emulate certain Fortran I/O statements:
 ```@docs
-rewind
+seekstart
 ```
 
 

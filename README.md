@@ -55,7 +55,7 @@ i, strings, zmatrix = read(f, Int32, (FString{20},10), (ComplexF64,10,10))
 read(f)
 
 # go back to the beginning of the file
-rewind(f)
+seekstart(f)
 ```
 
 Example usage for writing files:

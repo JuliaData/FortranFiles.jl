@@ -12,7 +12,7 @@ FortranFiles.jl Changelog
 
 Version 0.6.2-DEV
 -------------
-
+- ![INFO][badge-info] `seekstart` is used instead of `rewind` (which will be deprecated in future version).
 
 Version 0.6.1
 -------------
