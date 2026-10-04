@@ -293,6 +293,60 @@ end
     end
 end
 
+@testset "Empty record and controls" begin
+    markers = [
+        ("4B", RECMRK4B), ("4B split", FortranFiles.WithSubrecords(2)),
+        ("8B", RECMRK8B), ("4B unsplit", FortranFiles.WithoutSubrecords{Int32}()),
+    ]
+    data = Int8[11, 22, 33, 44, 55]
+    @testset "Empty record public reads" begin
+        for (name, marker) in markers, order in ("native", "little-endian", "big-endian")
+            @testset "$name $order" begin
+                io = IOBuffer()
+                f = FortranFile(io; marker = marker, convert = order)
+                @test write(f) == 0
+                @test write(f, data) == length(data)
+                @test write(f, Int8[]) == 0
+                @test write(f, reverse(data)) == length(data)
+                @test write(f) == 0
+                seekstart(f)
+                @test read(f) === nothing
+                @test position(io) == (name == "8B" ? 16 : 8)
+                @test read(f, (Int8, length(data))) == data
+                @test isempty(read(f, (Int8, 0)))
+                @test read(f, (Int8, 2)) == reverse(data)[1:2]
+                @fread f empty::(Int8, 0)
+                @test isempty(empty)
+                @test eof(f)
+            end
+        end
+    end
+    @testset "Nonempty and invalid marker controls" begin
+        for (name, marker) in markers, order in ("native", "little-endian", "big-endian")
+            io = IOBuffer()
+            f = FortranFile(io; marker = marker, convert = order)
+            write(f, data)
+            write(f, reverse(data))
+            seekstart(f)
+            @test read(f, (Int8, length(data))) == data
+            @test read(f, (Int8, 2)) == reverse(data)[1:2]
+            @test eof(f)
+        end
+        for order in ("native", "little-endian", "big-endian")
+            encode = order == "native" ? identity : order == "little-endian" ? htol : hton
+            io = IOBuffer()
+            write(io, encode(Int32(0)), encode(Int32(1)))
+            seekstart(io)
+            @test_throws FortranFilesError read(FortranFile(io; convert = order))
+            io = IOBuffer()
+            write(io, encode(Int32(0)))
+            seekstart(io)
+            @test_throws EOFError read(FortranFile(io; convert = order))
+        end
+    end
+
+end
+
 @testset "Strings" begin
     jstr = "Hello World!"
     N = length(jstr)

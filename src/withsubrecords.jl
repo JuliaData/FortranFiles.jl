@@ -34,7 +34,10 @@ function Record(f::FortranFile{SequentialAccess{WithSubrecords}})
     conv = f.convert
     msl = f.acctyp.recmrktyp.max_subrecord_length
     subreclen, more = rdmarker(f.io, conv.onread) # read leading record marker
-    return RecordWithSubrecords(f.io, msl, subreclen, subreclen, more, false, false, Int64(0), conv)
+    rec = RecordWithSubrecords(f.io, msl, subreclen, subreclen, more, false, false, Int64(0), conv)
+    # Empty records have no payload read to consume their trailing marker.
+    subreclen == 0 && advance!(rec)
+    return rec
 end
 
 function Record(f::FortranFile{SequentialAccess{WithSubrecords}}, towrite::Integer)
