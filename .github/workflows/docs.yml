@@ -1,6 +1,7 @@
 name: docs
 
 on:
+  pull_request:
   push:
     branches:
       - 'master'
@@ -14,6 +15,7 @@ jobs:
     permissions:
       actions: write
       contents: write
+      pages: write
       pull-requests: read
       statuses: write
     runs-on: ${{ matrix.os }}
@@ -30,4 +32,8 @@ jobs:
         run: julia --color=yes --project=docs docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{secrets.DOCUMENTER_KEY}}
+      - name: Request GitHub Pages build
+        if: github.event_name == 'push' || github.event_name == 'release'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh api --method POST repos/${{ github.repository }}/pages/builds

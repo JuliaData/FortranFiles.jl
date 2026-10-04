@@ -12,6 +12,7 @@ FortranFiles.jl Changelog
 
 Version 0.6.3-DEV
 -------------
+- ![FIX][badge-fix] Publish documentation using the repository token and request the configured GitHub Pages build.
 - ![BUGFIX][badge-bugfix] Consume empty sequential records completely when skipping or reading zero-length arrays ([#20](https://github.com/JuliaData/FortranFiles.jl/pull/20)).
 
 Version 0.6.2
