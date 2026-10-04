@@ -38,6 +38,17 @@ function Base.read(f::FortranFile{DirectAccess}, specs...; rec::Integer = 0)
     return result
 end
 
+"""
+    read!(f::FortranFile, array::Array)
+    read!(f::FortranFile, array::Array; rec=N)
+
+Read one complete record into the pre-allocated `array` and return that array.
+Its element type and dimensions determine how much data is read; any remaining
+record data is skipped. For direct-access files, specify the record number
+with the `rec` keyword.
+"""
+Base.read!(f::FortranFile, array::Array; kwargs...) = read(f, array; kwargs...)
+
 function fread(rec::Record)
     return nothing
 end
