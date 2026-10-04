@@ -2,6 +2,7 @@
 
 ```@docs
 read
+read!
 @fread
 ```
 
@@ -35,7 +36,7 @@ read(lun) x
 
 ```julia
 vector = read(f, (Float64,10))       # read into a new array
-vector = zeros(10); read(f, vector)  # read into pre-existing array
+vector = zeros(10); read!(f, vector)  # read into pre-existing array
 ```
 corresponds to (Modern Fortran style)
 ```fortran
@@ -55,7 +56,7 @@ read(lun) (vector(i), i=1,10)
 ```julia
 matrix = read(f, (Float64,10,10))      # read into a new array
 matrix = read(f, (Float64,(10,10)))    # alternative syntax
-matrix = zeros(10,10); read(f, matrix) # read into existing array
+matrix = zeros(10,10); read!(f, matrix) # read into existing array
 
 ```
 corresponds to

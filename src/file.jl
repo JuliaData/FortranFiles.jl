@@ -28,7 +28,7 @@ Wrap the given `IO` stream as a `FortranFile` containing Fortran "unformatted"
   * "big-endian": use big-endian byte-order
   * "little-endian": use little-endian byte-order
 
-The returned `FortranFile` can be used with Julia's `read` and `write`
+The returned `FortranFile` can be used with Julia's `read`, `read!`, and `write`
 functions. See their documentation for more information.
 """
 function FortranFile(io::IO; access = "sequential", marker = RECMRKDEF, recl::Integer = 0, convert = "native")

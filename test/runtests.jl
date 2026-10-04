@@ -429,3 +429,55 @@ if Sys.islinux()
         endswith(fn, ".bin") && rm(fn)
     end
 end
+
+@testset "Preallocated Fortran read!" begin
+    markers = (RECMRK4B, FortranFiles.WithSubrecords(8), RECMRK8B, FortranFiles.WithoutSubrecords{Int32}())
+    data = reshape(Int32[11, -22, 33, -44, 55, -66], 2, 3)
+    nextdata = Int32[77, 88]
+    for marker in markers, order in ("native", "little-endian", "big-endian")
+        io = IOBuffer()
+        f = FortranFile(io; marker = marker, convert = order)
+        write(f, data)
+        write(f, nextdata)
+        seekstart(f)
+        dest = zeros(Int32, size(data))
+        @test read!(f, dest) === dest
+        @test dest == data
+        @test read(f, (Int32, 2)) == nextdata
+        @test eof(f)
+        seekstart(f)
+        small = zeros(Int32, 2)
+        @test read!(f, small) === small
+        @test small == vec(data)[1:2]
+        @test read(f, (Int32, 2)) == nextdata
+        seekstart(f)
+        empty = Int32[]
+        @test read!(f, empty) === empty
+        @test read(f, (Int32, 2)) == nextdata
+        seekstart(f)
+        @test read(f, dest) === dest
+        @test dest == data
+        io = IOBuffer()
+        f = FortranFile(io; marker = marker, convert = order)
+        write(f)
+        write(f, nextdata)
+        seekstart(f)
+        @test read!(f, empty) === empty
+        @test read(f, (Int32, 2)) == nextdata
+    end
+    for order in ("native", "little-endian", "big-endian")
+        io = IOBuffer()
+        f = FortranFile(io; access = "direct", recl = sizeof(data), convert = order)
+        write(f, -data; rec = 1)
+        write(f, data; rec = 2)
+        dest = zeros(Int32, size(data))
+        @test read!(f, dest; rec = 2) === dest
+        @test dest == data
+        @test read!(f, dest; rec = 1) === dest
+        @test dest == -data
+        @test_throws FortranFilesError read!(f, dest)
+        @test_throws FortranFilesError read!(f, dest; rec = 0)
+        @test read(f, dest; rec = 2) === dest
+        @test dest == data
+    end
+end
